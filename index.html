@@ -1,0 +1,1892 @@
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --accent:#c62828; /* vermelho principal */
+            --accent-2:#ff5252; /* tom mais claro */
+            --muted:#5a2a2a; /* texto secundário */
+            --bg:#fff5f5; /* fundo suave rosado */
+            --card:#fff;
+            --text:#071322;
+        }
+        *{box-sizing:border-box}
+        body{font-family:'Poppins',Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.45;margin:0;padding:0;background:linear-gradient(180deg,var(--bg),#edf3fb);color:var(--text);-webkit-font-smoothing:antialiased}
+        .app{max-width:420px;margin:28px auto;padding:18px;border-radius:16px;background:linear-gradient(180deg,var(--card),rgba(255,255,255,0.98));box-shadow:0 30px 80px rgba(11,11,11,0.12);min-height:680px}
+        header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+        h1{font-size:20px;margin:0}
+        .layout{display:grid;grid-template-columns:320px 1fr;gap:18px}
+        .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(10,25,50,0.06)}
+
+        /* login overlay */
+        .login-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(40,8,8,0.45),rgba(8,2,2,0.45));z-index:60;padding:20px}
+        .login-card{max-width:480px;width:100%;}
+
+        /* animations */
+        @keyframes fadeInScale { from { opacity:0; transform:scale(.98); } to { opacity:1; transform:scale(1); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%{ box-shadow:0 0 0 rgba(0,0,0,0)} 50%{ box-shadow:0 6px 24px rgba(198,40,40,0.12)} 100%{ box-shadow:0 0 0 rgba(0,0,0,0)} }
+        @keyframes tilePop { from { transform:translateY(6px) scale(.99); opacity:0 } to { transform:translateY(0) scale(1); opacity:1 } }
+        .login-overlay.showing .login-card{animation:slideUp .36s cubic-bezier(.2,.9,.3,1)}
+        .section.active{animation:fadeInScale .22s ease both}
+
+        label{display:block;font-size:13px;margin-top:8px;color:var(--muted)}
+        input[type=text], input[type=number], select, textarea, input[type=password]{width:100%;padding:12px;border:1px solid #e1e8f5;border-radius:10px;margin-top:6px;background:#fbfdff}
+        textarea{min-height:110px}
+        .row{display:flex;gap:8px}
+        .actions{display:flex;gap:8px;margin-top:12px}
+        button{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .12s, box-shadow .18s, filter .12s}
+        button:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 12px 30px rgba(198,40,40,0.16);filter:brightness(1.02)}
+        button:active{transform:translateY(-1px) scale(.995)}
+        button.secondary{background:linear-gradient(90deg,#7b2c2c,#a83b3b);color:#fff}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{padding:10px;border-bottom:1px solid #f1f5fb;text-align:left}
+        th{background:#fbfdff}
+        .small{font-size:13px;color:var(--muted)}
+        .tools{display:flex;gap:8px;align-items:center}
+        input[type=file]{display:none}
+        .photo-preview{width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid #eef4ff}
+        .controls{display:flex;align-items:center;gap:8px}
+        .search{padding:10px;border:1px solid #e3e8f1;border-radius:10px;width:260px;background:#fff}
+        .muted{color:var(--muted);font-size:13px}
+        footer{margin-top:14px;color:var(--muted);font-size:13px}
+        /* student dashboard styles */
+        #studentDashboard .statRow{display:flex;gap:12px;margin-top:12px}
+        .stat{flex:1;background:#f8fbff;padding:12px;border-radius:10px;text-align:center}
+        .stat strong{display:block;font-size:18px}
+        .center{display:flex;flex-direction:column;align-items:center;justify-content:center}
+        nav.appNav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+        nav.appNav button{background:transparent;color:var(--accent);border:1px solid rgba(198,40,40,0.06);padding:8px;border-radius:8px;transition:transform .12s,box-shadow .12s}
+        nav.appNav button:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(198,40,40,0.06)}
+        nav.appNav button.active{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff}
+        @media(max-width:900px){.layout{grid-template-columns:1fr;}}
+        /* App header */
+        .app-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+        .app-title{display:flex;flex-direction:column}
+        .app-title strong{font-size:18px;letter-spacing:0.2px;color:var(--accent)}
+        .app-title .sub{font-size:13px;color:var(--muted)}
+        .user-controls{display:flex;gap:8px;align-items:center}
+
+        /* Nav as tiles */
+        .nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+        .nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fff7f7);border:1px solid rgba(198,40,40,0.05);box-shadow:0 6px 18px rgba(198,40,40,0.04);font-weight:600;color:var(--accent);min-height:72px;transition:transform .18s,box-shadow .18s}
+        .nav button:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(198,40,40,0.08)}
+        .nav button .icon{font-size:20px;margin-bottom:6px}
+
+        /* active tile */
+        .nav button.active-tile{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 18px 46px rgba(198,40,40,0.20);transform:translateY(-8px)}
+
+        /* list/grid item cards */
+        .list.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:0}
+        .list.grid li{list-style:none;background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(10,25,50,0.04);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+        .list.grid li .muted{font-size:13px;color:var(--muted)}
+        .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
+        .status-approved{background:#e6fbf2;color:#117a4a}
+        .status-warning{background:#fff4e6;color:#b25b00}
+        .status-neutral{background:#eef4ff;color:#145ea8}
+        .card-item-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+        /* small improvements for simple lists */
+        .list li{padding:8px 6px;border-bottom:1px dashed #eef4ff}
+
+        /* Section cards */
+        .section{display:none;background:var(--card);padding:22px;border-radius:12px;box-shadow:0 8px 18px rgba(198,40,40,0.03)}
+        .section.active{display:block!important;animation:slideUp .26s ease both}
+
+        /* Login card improvements */
+        .login-card{padding:22px;border-radius:14px;box-shadow:0 24px 60px rgba(198,40,40,0.12);background:linear-gradient(180deg,#fff8f8,#fff);border-left:6px solid rgba(198,40,40,0.12)}
+        .login-card .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+        .login-card .login-brand .logo{font-size:30px;line-height:1;animation:pulse 2.6s infinite}
+        .login-card .login-brand .title{font-size:18px;font-weight:700;color:var(--accent)}
+        .login-card strong{display:block;font-size:18px;margin-bottom:6px}
+        .login-card .small{margin-bottom:8px}
+
+        /* buttons */
+        .secondary{background:linear-gradient(90deg,#7b2c2c,#a83b3b);color:#fff;padding:8px 12px;border-radius:10px;border:0}
+
+        /* Hide student-only nav for professor */
+        .professor-mode .student-only {
+            display: none !important;
+        }
+
+        /* Dark mode overrides */
+        body.dark-mode{
+            --accent: #ff8a80;
+            --accent-2: #ff5252;
+            --muted: #f0dede;
+            --bg: linear-gradient(180deg,#0b0b0b,#151515);
+            --card: #111314;
+            --text: #f4f4f4;
+        }
+
+        /* When in dark mode, adjust some backgrounds used directly */
+        body.dark-mode .login-overlay{background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.6))}
+        body.dark-mode .nav button{background:linear-gradient(180deg,#171717,#1b1b1b);border:1px solid rgba(255,82,82,0.06)}
+
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div class="app">
+    <div id="loginScreen" class="login-overlay">
+        <div class="card login-card">
+            <div class="login-brand">
+                <div class="logo">📕</div>
+                <div class="title">SIGA — Acesso</div>
+            </div>
+            <strong>Entrar</strong>
+            <div class="small muted">Use: usuário <code>aluno</code> ou <code>aluno123</code> / senha <code>123</code> (aluno) ou usuário <code>professor</code> / senha <code>123</code> (professor)</div>
+            <form id="loginForm" style="margin-top:12px">
+                <label>Usuário</label>
+                <input id="loginUser" type="text" required placeholder="Seu usuário" />
+                <label>Senha</label>
+                <input id="loginPass" type="password" required placeholder="Senha" />
+                <div class="actions">
+                    <button type="submit">Entrar</button>
+                    <button type="button" id="demoCredentials" class="secondary">Credenciais de demo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div id="main" class="container" style="display: none;">
+        <div class="app-header">
+            <div class="app-title"><strong>SIGA</strong><div class="sub">Gerenciador Acadêmico — Gabriela</div></div>
+            <div class="user-controls"><span id="loggedUser" class="small muted" style="margin-right:8px;display:none"></span><button id="themeToggleBtn" class="secondary" title="Alternar tema">🌙</button><button id="logoutBtnTop" class="secondary">Sair</button></div>
+        </div>
+
+        <!-- NAV DO ALUNO -->
+        <div id="studentNav" class="nav">
+            <button data-view="home" onclick="showSection('home')"><span class="icon">🏠</span>Home</button>
+            <button data-view="novidades" onclick="showSection('novidades')"><span class="icon">📢</span>Novidades</button>
+            <button data-view="notas" onclick="showSection('notas')"><span class="icon">📝</span>Notas</button>
+            <button data-view="faltas" onclick="showSection('faltas')"><span class="icon">📊</span>Faltas</button>
+            <button data-view="horario" onclick="showSection('horario')"><span class="icon">⏰</span>Horário</button>
+            <button data-view="disciplinas" onclick="showSection('disciplinas')"><span class="icon">📚</span>Disciplinas</button>
+            <button data-view="historico" onclick="showSection('historico')"><span class="icon">📜</span>Histórico</button>
+            <button data-view="documentos" onclick="showSection('documentos')"><span class="icon">📂</span>Documentos</button>
+            <button data-view="etapas" onclick="showSection('etapas')"><span class="icon">🗂️</span>Etapas</button>
+            <button data-view="revisao" onclick="showSection('revisao')"><span class="icon">✉️</span>Revisão</button>
+            <button data-view="rematricula" onclick="showSection('rematricula')"><span class="icon">🔁</span>Rematrícula</button>
+            <button data-view="solicitar-ae" onclick="showSection('solicitar-ae')"><span class="icon">📝</span>Solicitar AE</button>
+            <button data-view="regime-domiciliar" onclick="showSection('regime-domiciliar')"><span class="icon">🏡</span>Regime</button>
+            <button data-view="solicitar-ac" onclick="showSection('solicitar-ac')"><span class="icon">⭐</span>Solicitar AC</button>
+            <button data-view="perfil" onclick="showSection('perfil')"><span class="icon">👤</span>Perfil</button>
+        </div>
+
+        <!-- NAV DO PROFESSOR -->
+        <div id="professorNav" class="nav" style="display:none">
+            <button data-view="turmas" onclick="showSection('turmas')"><span class="icon">👥</span>Turmas</button>
+            <button data-view="cadastro-turmas" onclick="showSection('cadastro-turmas')"><span class="icon">🆕</span>Nova Turma</button>
+            <button data-view="faltas-justificativa" onclick="showSection('faltas-justificativa')"><span class="icon">📋</span>Faltas</button>
+            <button data-view="lista-chamada" onclick="showSection('lista-chamada')"><span class="icon">📋</span>Chamada</button>
+            <button data-view="cadastro-alunos" onclick="showSection('cadastro-alunos')"><span class="icon">➕</span>Cadastro</button>
+            <button data-view="lancar-notas" onclick="showSection('lancar-notas')"><span class="icon">📝</span>Lançar Notas</button>
+            <button data-view="notas-lancadas" onclick="showSection('notas-lancadas')"><span class="icon">📊</span>Notas</button>
+            <button data-view="solicitacoes" onclick="showSection('solicitacoes')"><span class="icon">📬</span>Solicitações</button>
+            <button data-view="perfil" onclick="showSection('perfil-professor')"><span class="icon">👤</span>Perfil</button>
+        </div>
+
+        <!-- SEÇÕES DO PROFESSOR -->
+        <!-- Turmas -->
+        <div id="turmas" class="section">
+            <h2>👥 Minhas Turmas</h2>
+            <div id="turmasContainer" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px"></div>
+        </div>
+
+        <!-- Faltas / Justificativas -->
+        <div id="faltas-justificativa" class="section">
+            <h2>📋 Justificativas de Faltas</h2>
+            <div style="padding:14px;background:#f3e5f5;border-radius:10px;border:1px solid #ce93d8;margin-bottom:16px">
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+                    <div style="flex:1;min-width:220px">
+                        <label>Aluno</label>
+                        <select id="selectStudentForAbsence"></select>
+                    </div>
+                    <div style="flex:1;min-width:220px">
+                        <label>Motivo da Falta</label>
+                        <input id="absenceReason" type="text" placeholder="Ex: Atestado médico, Problema pessoal..." />
+                    </div>
+                    <div style="width:200px">
+                        <label>Data da Falta</label>
+                        <input id="absenceDate" type="date" />
+                    </div>
+                    <div>
+                        <button id="addAbsenceBtn" type="button" style="padding:10px 14px;background:linear-gradient(90deg,#ff6b6b,#ff5252);color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">Registrar</button>
+                    </div>
+                </div>
+            </div>
+            <strong>Justificativas Registradas:</strong>
+            <ul id="absenceListDisplay" class="list" style="margin-top:8px"></ul>
+        </div>
+
+        <!-- Cadastro de Alunos -->
+        <div id="cadastro-alunos" class="section">
+            <h2>➕ Cadastrar Novo Aluno</h2>
+            <div style="padding:14px;background:#f0f8ff;border-radius:10px;border:1px solid #b3d9ff;margin-bottom:16px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+                    <div>
+                        <label style="font-weight:600">Nome</label>
+                        <input id="newStudentName" type="text" placeholder="Nome completo" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">RA</label>
+                        <input id="newStudentRA" type="text" placeholder="Ex: 123456" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Curso</label>
+                        <input id="newStudentCourse" type="text" placeholder="Ex: Análise e Desenvolvimento" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Semestre</label>
+                        <input id="newStudentSemester" type="number" placeholder="Ex: 4" />
+                    </div>
+                    <div style="display:flex;align-items:flex-end">
+                        <button id="addStudentBtn" type="button" style="width:100%;padding:10px;background:linear-gradient(90deg,#c62828,#ff5252);color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">Cadastrar Aluno</button>
+                    </div>
+                </div>
+                <div id="studentListPreview" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+            </div>
+        </div>
+
+        <!-- Lançar Notas -->
+        <div id="lancar-notas" class="section">
+            <h2>📝 Lançar Notas</h2>
+            <div style="padding:14px;background:#f8fbff;border-radius:10px;border:1px solid #b3d9ff;margin-bottom:16px">
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
+                    <div style="flex:1;min-width:220px">
+                        <label>Aluno</label>
+                        <select id="selectStudentForGrade" onchange="updateDisciplinasForStudent()"></select>
+                    </div>
+                    <div style="width:220px">
+                        <label>Disciplina</label>
+                        <select id="profDisciplina" onchange="updateMetricaInfo()">
+                            <option value="">-- Selecionar Disciplina --</option>
+                        </select>
+                    </div>
+                    <div style="width:120px">
+                        <label>Nota</label>
+                        <input id="profNota" type="number" step="0.01" />
+                    </div>
+                    <div>
+                        <button id="postGradeBtn" style="padding:10px 14px">Postar</button>
+                    </div>
+                </div>
+
+                <strong style="display:block;margin-bottom:12px">📋 Tipo de Métrica / Avaliação</strong>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
+                    <div style="grid-column:1/-1">
+                        <label style="font-weight:600">Selecione o Tipo de Métrica</label>
+                        <select id="metricaType" onchange="updateMetricaInfo()" style="width:100%;margin-top:6px">
+                            <option value="">-- Escolha a Métrica --</option>
+                            <option value="teste">Teste / Prova</option>
+                            <option value="trabalho">Trabalho / Projeto</option>
+                            <option value="pratica">Avaliação Prática</option>
+                            <option value="participacao">Participação em Aula</option>
+                            <option value="apresentacao">Apresentação</option>
+                            <option value="recuperacao">Recuperação</option>
+                            <option value="projeto">Projeto de Longa Duração</option>
+                            <option value="autoavaliacao">Autoavaliação</option>
+                        </select>
+                    </div>
+                    <div style="grid-column:1/-1;padding:12px;background:#fff9e6;border-radius:8px;border-left:4px solid #ffb74d">
+                        <strong style="display:block;margin-bottom:6px">ℹ️ Sobre a Métrica Selecionada:</strong>
+                        <div id="metricaInfo" style="font-size:13px;color:#666;line-height:1.5">Selecione um tipo de métrica para ver a descrição</div>
+                    </div>
+                </div>
+
+                <strong style="display:block;margin-bottom:12px">📊 Detalhes da Avaliação</strong>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+                    <div>
+                        <label style="font-weight:600">Identificação</label>
+                        <input id="profTestId" type="text" placeholder="Ex: Teste001" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Objetivo</label>
+                        <input id="profTestObjective" type="text" placeholder="Ex: Ordenação decrescente" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Dados de Entrada</label>
+                        <input id="profTestData" type="text" placeholder="Ex: 3 2 1" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Procedimento</label>
+                        <input id="profTestProcedure" type="text" placeholder="Ex: Digitar valores" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Resultado Esperado</label>
+                        <input id="profTestExpected" type="text" placeholder="Ex: 3" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Resultado Obtido</label>
+                        <input id="profTestObtained" type="text" placeholder="Ex: 3" />
+                    </div>
+                    <div style="grid-column:1/-1">
+                        <label style="font-weight:600">Observações</label>
+                        <textarea id="profTestObservations" placeholder="Ex: Teste passou com sucesso" style="min-height:60px"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notas Lançadas -->
+        <div id="notas-lancadas" class="section">
+            <h2>📊 Notas Lançadas</h2>
+            <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <label>Filtrar por aluno:</label>
+                <select id="filterStudentGrades" onchange="filterAndRenderGrades()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <ul id="gradesListDisplay" class="list" style="margin-top:8px"></ul>
+        </div>
+
+        <!-- Solicitações -->
+        <div id="solicitacoes" class="section">
+            <h2>📬 Solicitações de Alunos</h2>
+            <ul id="requestsList" class="list" style="margin-top:8px"></ul>
+        </div>
+
+        <!-- Cadastrar Nova Turma (Professor) -->
+        <div id="cadastro-turmas" class="section">
+            <h2>🆕 Cadastrar Nova Turma</h2>
+            <div style="padding:14px;background:#fff3e0;border-radius:10px;border:1px solid #ffb74d;margin-bottom:16px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+                    <div>
+                        <label style="font-weight:600">Nome da Turma</label>
+                        <input id="newTurmaName" type="text" placeholder="Ex: Algoritmos Turma A" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Disciplina</label>
+                        <input id="newTurmaDisciplina" type="text" placeholder="Ex: Algoritmos" />
+                    </div>
+                    <div>
+                        <label style="font-weight:600">Semestre</label>
+                        <input id="newTurmaSemestre" type="number" placeholder="Ex: 4" />
+                    </div>
+                </div>
+                <strong style="display:block;margin-top:14px;margin-bottom:8px">Horários da Turma</strong>
+                <div id="horariosContainer" style="margin-bottom:12px">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px">
+                        <div>
+                            <label style="font-size:12px;color:var(--muted)">Dia da Semana</label>
+                            <input class="horarioDay" type="text" placeholder="Ex: Segunda" />
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--muted)">Horário</label>
+                            <input class="horarioTime" type="text" placeholder="Ex: 14:00-16:00" />
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--muted)">Sala</label>
+                            <input class="horarioSala" type="text" placeholder="Ex: 101" />
+                        </div>
+                        <div style="display:flex;align-items:flex-end">
+                            <button type="button" class="removeHorarioBtn" style="width:100%;padding:8px;background:#ff6b6b;color:#fff;border:0;border-radius:8px;cursor:pointer;font-size:12px">Remover</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="addHorarioBtn" type="button" style="padding:8px 12px;background:#6c757d;color:#fff;border:0;border-radius:8px;cursor:pointer;font-size:12px;margin-bottom:16px">+ Adicionar Horário</button>
+                <div>
+                    <button id="createTurmaBtn" type="button" style="width:100%;padding:12px;background:linear-gradient(90deg,#c62828,#ff5252);color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">Criar Turma</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Chamada por Disciplina -->
+        <div id="lista-chamada" class="section">
+            <h2>📋 Lista de Chamada</h2>
+            <div style="padding:14px;background:#f0f8ff;border-radius:10px;border:1px solid #b3d9ff;margin-bottom:16px">
+                <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:220px">
+                        <label style="font-weight:600">Selecione a Disciplina:</label>
+                        <select id="selectDisciplinaFalta" onchange="loadAlunosForDisciplina()" style="width:100%;margin-top:6px">
+                            <option value="">-- Selecionar Disciplina --</option>
+                        </select>
+                    </div>
+                    <div style="width:180px">
+                        <label style="font-weight:600">Dia da Semana</label>
+                        <select id="selectDiaSemana" style="width:100%;margin-top:6px">
+                            <option value="">-- Selecionar Dia --</option>
+                            <option value="Domingo">Domingo</option>
+                            <option value="Segunda">Segunda</option>
+                            <option value="Terça">Terça</option>
+                            <option value="Quarta">Quarta</option>
+                            <option value="Quinta">Quinta</option>
+                            <option value="Sexta">Sexta</option>
+                            <option value="Sábado">Sábado</option>
+                        </select>
+                    </div>
+                    <div style="width:180px">
+                        <label style="font-weight:600">Data da Chamada</label>
+                        <input id="selectDataChamada" type="date" style="width:100%;margin-top:6px" />
+                    </div>
+                </div>
+                <div id="alunosChamadaContainer" style="display:none">
+                    <div style="margin-bottom:16px;display:flex;gap:8px">
+                        <button id="marcarTodosPresenteBtn" style="padding:8px 12px;background:#28a745;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">✓ Todos Presentes</button>
+                        <button id="marcarTodosFaltaBtn" style="padding:8px 12px;background:#dc3545;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">✗ Todos com Falta</button>
+                        <button id="salvarChamadaBtn" style="padding:8px 12px;background:#007bff;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600">💾 Salvar Chamada</button>
+                    </div>
+                    <div style="max-height:400px;overflow-y:auto;border:1px solid #b3d9ff;border-radius:8px;padding:12px;background:#fff">
+                        <ul id="alunosChamadaList" class="list" style="margin:0;padding:0"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perfil do Professor -->
+        <div id="perfil-professor" class="section" style="display:none">
+            <h2>👤 Perfil do Professor</h2>
+            <div style="padding:14px;background:#f8fbff;border-radius:10px;border:1px solid #b3d9ff">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:6px">Nome:</label>
+                        <div id="profName" style="padding:10px;background:#fff;border-radius:8px;border:1px solid #e1e8f5">-</div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:6px">Usuário:</label>
+                        <div id="profUsername" style="padding:10px;background:#fff;border-radius:8px;border:1px solid #e1e8f5">-</div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:6px">Total de Turmas:</label>
+                        <div id="profTurmasCount" style="padding:10px;background:#fff;border-radius:8px;border:1px solid #e1e8f5">0</div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:6px">Total de Alunos:</label>
+                        <div id="profStudentsCount" style="padding:10px;background:#fff;border-radius:8px;border:1px solid #e1e8f5">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home -->
+        <div id="home" class="section active">
+            <h2>Bem-vindo ao SIGA Student Assistant</h2>
+            <p>Clique em uma opção acima para navegar.</p>
+        </div>
+
+        <!-- Novidades FATEC -->
+        <div id="novidades" class="section">
+            <h2>📢 Novidades FATEC</h2>
+            <div id="novidades-container" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px"></div>
+        </div>
+
+        <!-- Notas -->
+        <div id="notas" class="section">
+            <h2>Notas</h2>
+            <ul class="list" id="notas-list"></ul>
+        </div>
+
+        <!-- Faltas -->
+        <div id="faltas" class="section">
+            <h2>Faltas</h2>
+            <ul class="list" id="faltas-list"></ul>
+        </div>
+
+        <!-- Horário -->
+        <div id="horario" class="section">
+            <h2>Horário</h2>
+            <ul class="list" id="horario-list"></ul>
+        </div>
+
+        <!-- Disciplinas -->
+        <div id="disciplinas" class="section">
+            <h2>Disciplinas</h2>
+            <ul class="list" id="disciplinas-list"></ul>
+        </div>
+
+        <!-- Histórico -->
+        <div id="historico" class="section">
+            <h2>Histórico</h2>
+            <ul class="list" id="historico-list"></ul>
+        </div>
+
+        <!-- Documentos -->
+        <div id="documentos" class="section">
+            <h2>Documentos</h2>
+            <ul class="list" id="documentos-list"></ul>
+        </div>
+
+        </div>
+
+        <!-- Revisão -->
+        <div id="revisao" class="section">
+            <h2>Revisão de Notas/Faltas</h2>
+            <form class="form" onsubmit="handleRevisao(event)">
+                <select id="tipo-revisao">
+                    <option>Revisão de Nota</option>
+                    <option>Correção de Ausência</option>
+                </select>
+                <textarea id="justificativa-revisao" placeholder="Justificativa"></textarea>
+                <input type="file" id="arquivo-revisao">
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Rematrícula -->
+        <div id="rematricula" class="section">
+            <h2>Rematrícula</h2>
+            <form class="form" onsubmit="handleRematricula(event)">
+                <input type="text" id="disciplinas-rematricula" placeholder="Disciplinas (ex: Algoritmos, Matemática)">
+                <button type="submit">Confirmar</button>
+            </form>
+        </div>
+
+        <!-- Solicitar AE -->
+        <div id="solicitar-ae" class="section">
+            <h2>Solicitar AE (Atividades Especiais)</h2>
+            <form class="form" onsubmit="handleAE(event)">
+                <textarea id="detalhes-ae" placeholder="Detalhes da solicitação"></textarea>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Regime Domiciliar -->
+        <div id="regime-domiciliar" class="section">
+            <h2>Regime Domiciliar</h2>
+            <form class="form" onsubmit="handleRegime(event)">
+                <textarea id="motivo-regime" placeholder="Motivo"></textarea>
+                <input type="file" id="atestado-regime">
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Solicitar AC -->
+        <div id="solicitar-ac" class="section">
+            <h2>Solicitar AC (Atividades Complementares)</h2>
+            <form class="form" onsubmit="handleAC(event)">
+                <input type="text" id="descricao-ac" placeholder="Descrição">
+                <input type="number" id="horas-ac" placeholder="Horas">
+                <input type="file" id="comprovante-ac">
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Perfil -->
+        <div id="perfil" class="section">
+            <h2>Perfil do Aluno</h2>
+            <ul class="list" id="perfil-list"></ul>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Dados mockados
+        const notas = [
+            { disciplina: 'Algoritmos', notaParcial: 8.5, notaFinal: 9.0, media: 8.75, status: 'Aprovado' },
+            { disciplina: 'Banco de Dados', notaParcial: 7.0, notaFinal: 7.5, media: 7.25, status: 'Aprovado' },
+            { disciplina: 'Matemática', notaParcial: 6.0, notaFinal: 8.2, media: 7.1, status: 'Aprovado' }
+        ];
+
+        const faltas = [
+            { disciplina: 'Algoritmos', totalAulas: 40, ausencias: 5, percentual: 87.5 },
+            { disciplina: 'Banco de Dados', totalAulas: 40, ausencias: 10, percentual: 75.0 },
+            { disciplina: 'Matemática', totalAulas: 40, ausencias: 12, percentual: 70.0 }
+        ];
+
+        const horario = [
+            { dia: 'Segunda', horario: '08:00-10:00', disciplina: 'Algoritmos', professor: 'Prof. João', sala: '101' },
+            { dia: 'Terça', horario: '10:00-12:00', disciplina: 'Banco de Dados', professor: 'Prof. Maria', sala: '102' }
+        ];
+
+        const disciplinas = [
+            { nome: 'Algoritmos', ementa: 'Introdução a algoritmos', professor: 'Prof. João', cargaHoraria: 60, situacao: 'Ativo' }
+        ];
+
+        const historico = [
+            { disciplina: 'Algoritmos', nota: 9.0, creditos: 4, coeficiente: 3.5, status: 'Aprovado' }
+        ];
+
+        const documentos = [
+            { nome: 'Atestado Médico', url: '#' },
+            { nome: 'Comprovante de Matrícula', url: '#' }
+        ];
+
+        const perfil = {
+            nome: 'Gabriela Silva',
+            ra: '123456',
+            curso: 'Ciência da Computação',
+            semestre: 4,
+            pp: 85.0,
+            pr: 80.0,
+            ppi: 82.0,
+            unidade: 'Campus São Paulo'
+        };
+
+        // Notícias e eventos mockados para a área de alunos
+        const novidades = [
+            {
+                id: 1,
+                tipo: 'noticia',
+                titulo: 'Período de Pré-Inscrição em Disciplinas Optativas',
+                data: '2025-11-20',
+                descricao: 'Alunos do 4º semestre podem se inscrever em disciplinas optativas até o dia 25 de novembro. Acesse o portal acadêmico para consultar a lista completa.',
+                icone: '📚'
+            },
+            {
+                id: 2,
+                tipo: 'evento',
+                titulo: 'Semana de Tecnologia - FATEC 2025',
+                data: '2025-11-24',
+                descricao: 'Palestras com profissionais da indústria, workshops práticos e networking. Local: Auditório Principal. Horário: 08:00 às 17:00',
+                local: 'Auditório Principal',
+                icone: '🎤'
+            },
+            {
+                id: 3,
+                tipo: 'noticia',
+                titulo: 'Resultado das Avaliações — Parcial 1',
+                data: '2025-11-22',
+                descricao: 'Os resultados da avaliação parcial foram divulgados. Confira seu desempenho no histórico de notas.',
+                icone: '📊'
+            },
+            {
+                id: 4,
+                tipo: 'evento',
+                titulo: 'Sessão de Planejamento Acadêmico',
+                data: '2025-11-27',
+                descricao: 'Encontro com coordenadores e professores para discussão de metas e planos de estudo. Inscrições abertas.',
+                local: 'Sala 301',
+                icone: '📋'
+            },
+            {
+                id: 5,
+                tipo: 'noticia',
+                titulo: 'Nova Biblioteca Digital Disponível',
+                data: '2025-11-19',
+                descricao: 'Acesso a mais de 5 mil e-books e periódicos científicos. Consulte o e-mail enviado com instruções de login.',
+                icone: '📖'
+            },
+            {
+                id: 6,
+                tipo: 'evento',
+                titulo: 'Hackathon de Inovação - FATEC 2025',
+                data: '2025-11-28',
+                descricao: 'Competição de inovação e programação com prêmios de até R$ 5.000. Equipes de até 5 pessoas. Inscrições: até 26 de novembro.',
+                local: 'Laboratório de Desenvolvimento',
+                icone: '💻'
+            },
+            {
+                id: 7,
+                tipo: 'noticia',
+                titulo: 'Bolsas de Iniciação Científica Abertas',
+                data: '2025-11-21',
+                descricao: 'FATEC abre 15 bolsas para alunos interessados em pesquisa. Bolsa de R$ 500,00. Currículo e entrevista obrigatórios.',
+                icone: '🔬'
+            },
+            {
+                id: 8,
+                tipo: 'evento',
+                titulo: 'Coffee Break com Profissionais da Tech',
+                data: '2025-11-26',
+                descricao: 'Conversa informal com engenheiros e arquitetos de software de grandes empresas. Networking e oportunidades de carreira.',
+                local: 'Cafeteria Principal',
+                icone: '☕'
+            },
+            {
+                id: 9,
+                tipo: 'noticia',
+                titulo: 'Atualização do Portal Acadêmico',
+                data: '2025-11-23',
+                descricao: 'Portal acadêmico recebeu novas funcionalidades: download de certificados, consulta de boleto e histório de acessos.',
+                icone: '💾'
+            },
+            {
+                id: 10,
+                tipo: 'evento',
+                titulo: 'Workshop: Git & GitHub na Prática',
+                data: '2025-11-25',
+                descricao: 'Aprenda a usar Git e GitHub em um workshop prático com exercícios reais. Vagas limitadas a 30 alunos.',
+                local: 'Sala de Informática 02',
+                icone: '🔧'
+            },
+            {
+                id: 11,
+                tipo: 'noticia',
+                titulo: 'Calendário Acadêmico 2026 — Versão Preliminar',
+                data: '2025-11-18',
+                descricao: 'Versão preliminar do calendário acadêmico 2026 foi divulgada. Sugestões podem ser enviadas até 30 de novembro.',
+                icone: '📅'
+            },
+            {
+                id: 12,
+                tipo: 'evento',
+                titulo: 'Palestra: Tendências em Cloud Computing',
+                data: '2025-11-29',
+                descricao: 'Especialista da Amazon AWS apresenta tendências e oportunidades em cloud. Inscrições abertas para alunos de Sistemas e Redes.',
+                local: 'Auditório Principal',
+                icone: '☁️'
+            }
+        ];
+
+        // Turmas mockadas
+        let turmas = [
+            {
+                id: 't1',
+                nome: 'Algoritmos - Turma A',
+                disciplina: 'Algoritmos',
+                semestre: 4,
+                horarios: [
+                    {dia: 'Segunda', horario: '08:00-10:00', sala: '101'},
+                    {dia: 'Quarta', horario: '08:00-10:00', sala: '101'}
+                ],
+                alunosIds: ['s1', 's2']
+            },
+            {
+                id: 't2',
+                nome: 'Banco de Dados - Turma B',
+                disciplina: 'Banco de Dados',
+                semestre: 4,
+                horarios: [
+                    {dia: 'Terça', horario: '10:00-12:00', sala: '102'},
+                    {dia: 'Quinta', horario: '10:00-12:00', sala: '102'}
+                ],
+                alunosIds: ['s1']
+            }
+        ];
+
+        // Students storage (simple)
+        const STUDENTS_KEY = 'siga_students_v1'
+        let students = []
+
+        function sampleStudents(){
+            return [
+                {id: 's1', nome: 'Gabriela Silva', ra: '123456', curso: perfil.curso, semestre: perfil.semestre, notas: [], frequencia: [], observacoes: ''},
+                {id: 's2', nome: 'João Pereira', ra: '987654', curso: 'Análise e Desenvolvimento', semestre:2, notas: [], frequencia: [], observacoes: ''}
+            ]
+        }
+
+        function saveStudents(){
+            try{ localStorage.setItem(STUDENTS_KEY, JSON.stringify(students)) }catch(e){}
+        }
+
+        function loadStudents(){
+            try{
+                const raw = localStorage.getItem(STUDENTS_KEY)
+                if(raw){ students = JSON.parse(raw) }
+                else { students = sampleStudents(); saveStudents() }
+            }catch(e){ students = sampleStudents(); saveStudents() }
+        }
+
+        function loadTurmas(){
+            try{
+                const raw = localStorage.getItem('siga_turmas_v1')
+                if(raw){ turmas = JSON.parse(raw) }
+                else { localStorage.setItem('siga_turmas_v1', JSON.stringify(turmas)) }
+            }catch(e){ localStorage.setItem('siga_turmas_v1', JSON.stringify(turmas)) }
+        }
+
+        function populateProfessorSelect(){
+            const sel = document.getElementById('selectStudentForGrade');
+            if(!sel) return
+            sel.innerHTML = ''
+            students.forEach(s=>{ const o = document.createElement('option'); o.value = s.id; o.textContent = `${s.nome} — ${s.ra}`; sel.appendChild(o) })
+        }
+
+        function populateGradeFilter(){
+            const sel = document.getElementById('filterStudentGrades');
+            if(!sel) return
+            const current = sel.value
+            sel.innerHTML = '<option value="">Todos</option>'
+            students.forEach(s=>{ const o = document.createElement('option'); o.value = s.id; o.textContent = `${s.nome} — ${s.ra}`; sel.appendChild(o) })
+            sel.value = current
+        }
+
+        function updateStudentListPreview(){
+            const preview = document.getElementById('studentListPreview')
+            if(!preview) return
+            if(students.length === 0) { preview.textContent = ''; return }
+            preview.textContent = `✓ ${students.length} aluno(s) cadastrado(s): ${students.map(s => s.nome).join(', ')}`
+        }
+
+        function populateAbsenceSelect(){
+            const sel = document.getElementById('selectStudentForAbsence')
+            if(!sel) return
+            sel.innerHTML = '<option value="">-- Selecionar Aluno --</option>'
+            students.forEach(s => {
+                const opt = document.createElement('option')
+                opt.value = s.id
+                opt.textContent = `${s.nome} (${s.ra})`
+                sel.appendChild(opt)
+            })
+        }
+
+        function renderTurmas(){
+            const container = document.getElementById('turmasContainer')
+            if(!container) return
+            container.innerHTML = turmas.map(turma => {
+                const alunosDaTurma = students.filter(s => turma.alunosIds.includes(s.id))
+                return `
+                    <div style="padding:12px;background:#fff;border-radius:10px;border:1px solid #ffb74d;cursor:pointer" onclick="showTurmaDetails('${turma.id}')">
+                        <strong>${turma.nome}</strong>
+                        <div class="muted" style="font-size:12px;margin-top:6px">
+                            <div>📚 Disciplina: ${turma.disciplina}</div>
+                            <div>👥 Alunos: ${alunosDaTurma.length}</div>
+                            <div>🕐 ${turma.horarios.map(h => h.dia + ' ' + h.horario).join(', ')}</div>
+                        </div>
+                    </div>
+                `
+            }).join('')
+        }
+
+        function showTurmaDetails(turmaId){
+            const turma = turmas.find(t => t.id === turmaId)
+            if(!turma) return
+            const alunosDaTurma = students.filter(s => turma.alunosIds.includes(s.id))
+            let msg = `TURMA: ${turma.nome}\n${'='.repeat(60)}\n`
+            msg += `Disciplina: ${turma.disciplina}\n`
+            msg += `Semestre: ${turma.semestre}\n\n`
+            msg += `HORÁRIOS:\n`
+            turma.horarios.forEach(h => {
+                msg += `  • ${h.dia} - ${h.horario} (Sala ${h.sala})\n`
+            })
+            msg += `\nALUNOS (${alunosDaTurma.length}):\n`
+            alunosDaTurma.forEach(a => {
+                msg += `  • ${a.nome} (RA: ${a.ra})\n`
+            })
+            alert(msg)
+        }
+
+        function renderAbsenceList(){
+            const ul = document.getElementById('absenceListDisplay')
+            if(!ul) return
+            const absences = JSON.parse(localStorage.getItem('siga_absences_v1') || '[]')
+            if(absences.length === 0) { ul.innerHTML = '<li class="muted">Nenhuma justificativa registrada</li>'; return }
+            ul.innerHTML = absences.map((a, idx) => {
+                const student = students.find(s => s.id === a.studentId)
+                return `<li style="padding:10px;background:#f3e5f5;border-radius:8px;display:flex;justify-content:space-between;align-items:flex-start">
+                    <div>
+                        <strong>${student?.nome || 'Aluno desconhecido'} (${student?.ra || '—'})</strong>
+                        <div class="muted" style="font-size:12px;margin-top:4px">Motivo: ${a.reason}</div>
+                        <div class="muted" style="font-size:12px">Data: ${new Date(a.date).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <button onclick="deleteAbsence(${idx})" style="padding:6px 10px;font-size:12px;background:#ffe6e6;color:#c00;border:0;border-radius:6px;cursor:pointer">Remover</button>
+                </li>`
+            }).join('')
+        }
+
+        function addAbsenceJustification(){
+            const studentId = document.getElementById('selectStudentForAbsence').value
+            const reason = document.getElementById('absenceReason').value.trim()
+            const date = document.getElementById('absenceDate').value
+            
+            if(!studentId || !reason || !date) { alert('Preencha todos os campos'); return }
+            
+            const student = students.find(s => s.id === studentId)
+            if(!student) { alert('Aluno não encontrado'); return }
+            
+            const absences = JSON.parse(localStorage.getItem('siga_absences_v1') || '[]')
+            absences.push({
+                studentId,
+                reason,
+                date,
+                ts: new Date().toISOString()
+            })
+            localStorage.setItem('siga_absences_v1', JSON.stringify(absences))
+            
+            document.getElementById('absenceReason').value = ''
+            document.getElementById('absenceDate').value = ''
+            
+            renderAbsenceList()
+            alert(`Justificativa registrada para ${student.nome}`)
+        }
+
+        function deleteAbsence(idx){
+            if(!confirm('Tem certeza que deseja remover esta justificativa?')) return
+            const absences = JSON.parse(localStorage.getItem('siga_absences_v1') || '[]')
+            absences.splice(idx, 1)
+            localStorage.setItem('siga_absences_v1', JSON.stringify(absences))
+            renderAbsenceList()
+            alert('Justificativa removida')
+        }
+
+        function addNewStudent(){
+            const nome = document.getElementById('newStudentName').value.trim()
+            const ra = document.getElementById('newStudentRA').value.trim()
+            const curso = document.getElementById('newStudentCourse').value.trim()
+            const semestre = document.getElementById('newStudentSemester').value ? Number(document.getElementById('newStudentSemester').value) : null
+            
+            if(!nome || !ra || !curso || !semestre){ alert('Preenchha todos os campos obrigatórios'); return }
+            if(students.some(s => s.ra === ra)){ alert('RA já cadastrado'); return }
+            
+            const newId = 's' + (parseInt(students[students.length-1]?.id?.substring(1) || 0) + 1)
+            const newStudent = {
+                id: newId,
+                nome,
+                ra,
+                curso,
+                semestre,
+                notas: [],
+                frequencia: [],
+                observacoes: ''
+            }
+            
+            students.push(newStudent)
+            saveStudents()
+            
+            // limpar campos
+            document.getElementById('newStudentName').value = ''
+            document.getElementById('newStudentRA').value = ''
+            document.getElementById('newStudentCourse').value = ''
+            document.getElementById('newStudentSemester').value = ''
+            
+            // atualizar selects
+            populateProfessorSelect()
+            populateGradeFilter()
+            updateStudentListPreview()
+            
+            alert(`Aluno "${nome}" cadastrado com sucesso!`)
+        }
+
+        function filterAndRenderGrades(){
+            const filterId = document.getElementById('filterStudentGrades').value
+            renderGrades(filterId)
+        }
+
+        function renderGrades(filterStudentId = ''){
+            const ul = document.getElementById('gradesListDisplay')
+            if(!ul) return
+            let allGrades = []
+            students.forEach(student=>{
+                if(filterStudentId && student.id !== filterStudentId) return
+                (student.notas || []).forEach(nota=>{
+                    allGrades.push({...nota, studentName: student.nome, studentRa: student.ra, studentId: student.id})
+                })
+            })
+            if(allGrades.length === 0){ ul.innerHTML = '<li class="muted">Nenhuma nota lançada</li>'; return }
+            ul.innerHTML = allGrades.map((g,idx)=>{
+                const tm = g.testMetrics || {}
+                return `<li style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px;background:#f9fbff;border-radius:10px">
+                    <div>
+                        <strong>${g.studentName} (${g.studentRa})</strong>
+                        <div class="muted">${g.disciplina} • Nota: ${g.nota !== null ? g.nota : '—'}</div>
+                        ${tm.identificacao ? `<div style="margin-top:6px;font-size:12px"><strong>Teste:</strong> ${tm.identificacao} - ${tm.objetivo}</div>` : ''}
+                        <div class="muted" style="margin-top:4px;font-size:11px">${g.professor} • ${new Date(g.ts).toLocaleString()}</div>
+                    </div>
+                    <div style="display:flex;gap:6px">
+                        <button onclick="viewGradeDetail('${g.studentId}','${g.ts}')" style="padding:6px 10px;font-size:12px;background:#eef4ff;color:var(--accent);border:0;border-radius:6px;cursor:pointer">Ver</button>
+                        <button onclick="deleteGrade('${g.studentId}','${g.ts}')" style="padding:6px 10px;font-size:12px;background:#ffe6e6;color:#c00;border:0;border-radius:6px;cursor:pointer">Apagar</button>
+                    </div>
+                </li>`
+            }).join('')
+        }
+
+        function viewGradeDetail(studentId, ts){
+            const student = students.find(s=>s.id === studentId)
+            if(!student) return
+            const grade = (student.notas || []).find(n=>n.ts === ts)
+            if(!grade) return
+            const tm = grade.testMetrics || {}
+            let msg = `DETALHES DA NOTA\n${'='.repeat(50)}\n`
+            msg += `Aluno: ${student.nome} (${student.ra})\n`
+            msg += `Disciplina: ${grade.disciplina}\n`
+            msg += `Nota: ${grade.nota !== null ? grade.nota : 'não informada'}\n`
+            msg += `Professor: ${grade.professor}\n`
+            msg += `Data: ${new Date(grade.ts).toLocaleString()}\n`
+            if(tm.identificacao){
+                msg += `\nMÉTRICAS DE TESTE\n${'='.repeat(50)}\n`
+                msg += `Identificação: ${tm.identificacao}\n`
+                msg += `Objetivo: ${tm.objetivo}\n`
+                msg += `Dados de Entrada: ${tm.dadosEntrada}\n`
+                msg += `Procedimento: ${tm.procedimento}\n`
+                msg += `Resultado Esperado: ${tm.resultadoEsperado}\n`
+                msg += `Resultado Obtido: ${tm.resultadoObtido}\n`
+                if(tm.observacoes) msg += `Observações: ${tm.observacoes}\n`
+            }
+            alert(msg)
+        }
+
+        function deleteGrade(studentId, ts){
+            if(!confirm('Tem certeza que deseja deletar este lançamento?')) return
+            const student = students.find(s=>s.id === studentId)
+            if(!student) return
+            const idx = (student.notas || []).findIndex(n=>n.ts === ts)
+            if(idx >= 0){
+                student.notas.splice(idx,1)
+                saveStudents()
+                renderGrades(document.getElementById('filterStudentGrades').value)
+                alert('Lançamento deletado')
+            }
+        }
+
+        // Funções para cadastro de turmas
+        function setupTurmaHorariosUI(){
+            const addBtn = document.getElementById('addHorarioBtn')
+            const container = document.getElementById('horariosContainer')
+            if(!addBtn) return
+            
+            addBtn.addEventListener('click', () => {
+                const newHorario = document.createElement('div')
+                newHorario.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px'
+                newHorario.innerHTML = `
+                    <div>
+                        <label style="font-size:12px;color:var(--muted)">Dia da Semana</label>
+                        <input class="horarioDay" type="text" placeholder="Ex: Segunda" />
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--muted)">Horário</label>
+                        <input class="horarioTime" type="text" placeholder="Ex: 14:00-16:00" />
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--muted)">Sala</label>
+                        <input class="horarioSala" type="text" placeholder="Ex: 101" />
+                    </div>
+                    <div style="display:flex;align-items:flex-end">
+                        <button type="button" class="removeHorarioBtn" style="width:100%;padding:8px;background:#ff6b6b;color:#fff;border:0;border-radius:8px;cursor:pointer;font-size:12px">Remover</button>
+                    </div>
+                `
+                container.insertBefore(newHorario, addBtn.parentElement)
+            })
+            
+            // Event delegation para remover horários
+            container.addEventListener('click', (e) => {
+                if(e.target.classList.contains('removeHorarioBtn')){
+                    e.target.closest('div[style*="grid"]').remove()
+                }
+            })
+        }
+
+        function createNewTurma(){
+            const nome = document.getElementById('newTurmaName')?.value.trim()
+            const disciplina = document.getElementById('newTurmaDisciplina')?.value.trim()
+            const semestre = document.getElementById('newTurmaSemestre')?.value
+            
+            if(!nome || !disciplina || !semestre){
+                alert('Preencha todos os campos obrigatórios')
+                return
+            }
+            
+            // Coletar horários
+            const horarioInputs = document.getElementById('horariosContainer').querySelectorAll('div[style*="grid"]')
+            const horarios = []
+            horarioInputs.forEach(div => {
+                const dia = div.querySelector('.horarioDay')?.value.trim()
+                const horario = div.querySelector('.horarioTime')?.value.trim()
+                const sala = div.querySelector('.horarioSala')?.value.trim()
+                if(dia && horario && sala){
+                    horarios.push({dia, horario, sala})
+                }
+            })
+            
+            if(horarios.length === 0){
+                alert('Adicione pelo menos um horário')
+                return
+            }
+            
+            // Criar turma
+            const newTurmaId = 't' + (parseInt(turmas[turmas.length-1]?.id?.substring(1) || 0) + 1)
+            const newTurma = {
+                id: newTurmaId,
+                nome,
+                disciplina,
+                semestre: parseInt(semestre),
+                horarios,
+                alunosIds: []
+            }
+            
+            turmas.push(newTurma)
+            localStorage.setItem('siga_turmas_v1', JSON.stringify(turmas))
+            
+            // Limpar formulário
+            document.getElementById('newTurmaName').value = ''
+            document.getElementById('newTurmaDisciplina').value = ''
+            document.getElementById('newTurmaSemestre').value = ''
+            
+            // Resetar horários
+            const container = document.getElementById('horariosContainer')
+            const allHorarios = container.querySelectorAll('div[style*="grid"]')
+            allHorarios.forEach((h, idx) => {
+                if(idx > 0) h.remove()
+            })
+            const firstHorario = container.querySelector('div[style*="grid"]')
+            if(firstHorario){
+                firstHorario.querySelector('.horarioDay').value = ''
+                firstHorario.querySelector('.horarioTime').value = ''
+                firstHorario.querySelector('.horarioSala').value = ''
+            }
+            
+            renderTurmas()
+            updateProfessorProfile()
+            alert(`Turma "${nome}" criada com sucesso!`)
+        }
+
+        // Mapeamento de métricas com descrições e exemplos práticos
+        const metricasDescricao = {
+            teste: {
+                desc: 'Teste/Prova: Avaliação formal com questões ou problemas de caráter individual para verificar compreensão teórica e resolução de problemas. Use para medir conhecimento consolidado sobre um conteúdo específico.',
+                exemplo: {
+                    identificacao: 'Teste001',
+                    objetivo: 'Identificar o maior número entre três valores fornecidos',
+                    dadosEntrada: '3 2 1',
+                    procedimento: 'O aluno informa três números; o programa deve retornar o maior.',
+                    resultadoEsperado: '3',
+                    resultadoObtido: '3',
+                    observacoes: 'Caso de entrada em ordem decrescente'
+                }
+            },
+            trabalho: {
+                desc: 'Trabalho/Projeto: Atividade prática ou relatório onde o aluno desenvolve uma solução, demonstra pesquisa ou aplica conceitos. Avalia pesquisa, organização, implementação e entrega de resultados.',
+                exemplo: {
+                    identificacao: 'TrabalhoA1',
+                    objetivo: 'Desenvolver um pequeno sistema CRUD para gerenciamento de alunos',
+                    dadosEntrada: 'Requisitos, modelo de dados, roteiro de uso',
+                    procedimento: 'Implementação do backend + frontend e entrega de relatório',
+                    resultadoEsperado: 'Sistema funcional com operações de criar/editar/remover/listar',
+                    resultadoObtido: '',
+                    observacoes: 'Avaliar arquitetura, qualidade do código e documentação'
+                }
+            },
+            pratica: {
+                desc: 'Avaliação Prática: Atividade em laboratório ou exercício prático que comprova habilidades operacionais e aplicação de técnicas (ex.: experimentos, coding labs, exercícios práticos).',
+                exemplo: {
+                    identificacao: 'LabSQL01',
+                    objetivo: 'Executar consultas SQL para obter relatórios com junções e agregações',
+                    dadosEntrada: 'Base de dados de exemplo fornecida',
+                    procedimento: 'Criar queries para as tarefas descritas no roteiro',
+                    resultadoEsperado: 'Resultados corretos para cada query',
+                    resultadoObtido: '',
+                    observacoes: 'Verificar desempenho e correção das consultas'
+                }
+            },
+            participacao: {
+                desc: 'Participação em Aula: Avaliação contínua do engajamento do aluno, intervenções, colaboração em discussões e contribuições durante as aulas. Indicado para avaliar comportamento e participação ativa.',
+                exemplo: {
+                    identificacao: 'PART-SEM1',
+                    objetivo: 'Avaliar a participação em debates e perguntas feitas em aula',
+                    dadosEntrada: 'Registros de participação durante o mês',
+                    procedimento: 'Registrar e pontuar contribuições relevantes',
+                    resultadoEsperado: 'Participação regular e contribuições relevantes',
+                    resultadoObtido: '',
+                    observacoes: 'Pode ser ponderado com frequência'
+                }
+            },
+            apresentacao: {
+                desc: 'Apresentação: Avaliação da exposição oral/escrita de trabalhos ou projetos, considerando clareza, conteúdo, uso de recursos e domínio do tema.',
+                exemplo: {
+                    identificacao: 'APRES-01',
+                    objetivo: 'Apresentar projeto final com slides e demonstração',
+                    dadosEntrada: 'Slides e código do projeto',
+                    procedimento: 'Exposição de 10 minutos + perguntas',
+                    resultadoEsperado: 'Apresentação clara e demonstração funcional',
+                    resultadoObtido: '',
+                    observacoes: 'Avaliar comunicação, conteúdo e domínio do tema'
+                }
+            },
+            recuperacao: {
+                desc: 'Recuperação: Avaliação destinada a recuperar aproveitamento do aluno em tópicos específicos após avaliação regular (pode ser aplicada como prova substitutiva ou atividade complementar).',
+                exemplo: {
+                    identificacao: 'REC-01',
+                    objetivo: 'Recuperar conteúdos de estruturas de dados',
+                    dadosEntrada: 'Conjunto de problemas cobrindo lista, pilha e fila',
+                    procedimento: 'Prova escrita prática',
+                    resultadoEsperado: 'Demonstração de compreensão mínima dos tópicos',
+                    resultadoObtido: '',
+                    observacoes: 'Usada apenas para alunos com desempenho insuficiente'
+                }
+            },
+            projeto: {
+                desc: 'Projeto de Longa Duração: Trabalho extenso que envolve planejamento, execução e entrega ao longo do semestre; avalia capacidade de integração de conteúdos e gestão de projeto.',
+                exemplo: {
+                    identificacao: 'PROJ-FINAL',
+                    objetivo: 'Desenvolver um produto mínimo viável (MVP) aplicando os conceitos do curso',
+                    dadosEntrada: 'Plano de projeto, milestones e entregas parciais',
+                    procedimento: 'Entregas por sprint e avaliação final',
+                    resultadoEsperado: 'MVP funcional e documentação',
+                    resultadoObtido: '',
+                    observacoes: 'Avaliar planejamento, execução e qualidade final'
+                }
+            },
+            autoavaliacao: {
+                desc: 'Autoavaliação: Instrumento no qual o próprio aluno reflete e atribui notas ao seu desempenho, promovendo metacognição e identificação de pontos de melhoria.',
+                exemplo: {
+                    identificacao: 'AUTO-01',
+                    objetivo: 'Solicitar que o aluno avalie sua contribuição em equipe',
+                    dadosEntrada: 'Questionário de autoavaliação',
+                    procedimento: 'Aluno preenche formulário e justifica as notas',
+                    resultadoEsperado: 'Reflexão crítica do aluno sobre seu desempenho',
+                    resultadoObtido: '',
+                    observacoes: 'Usar como componente complementar na nota'
+                }
+            }
+        }
+
+        function updateMetricaInfo(){
+            const metricaType = document.getElementById('metricaType')?.value
+            const infoEl = document.getElementById('metricaInfo')
+            if(!infoEl) return
+            if(!metricaType) {
+                infoEl.innerHTML = '<em>Selecione um tipo de métrica para ver a descrição e exemplo</em>'
+                return
+            }
+            const titulo = {
+                teste: 'Teste / Prova', trabalho: 'Trabalho / Projeto', pratica: 'Avaliação Prática', participacao: 'Participação', apresentacao: 'Apresentação', recuperacao: 'Recuperação', projeto: 'Projeto', autoavaliacao: 'Autoavaliação'
+            }[metricaType] || 'Métrica'
+
+            const entry = metricasDescricao[metricaType]
+            const texto = entry?.desc || 'Descrição não disponível.'
+            const ex = entry?.exemplo
+            let exemploHtml = ''
+            if(ex){
+                exemploHtml = `
+                    <div style="margin-top:10px;padding:10px;border-radius:8px;background:#fff7f7;border-left:4px solid rgba(198,40,40,0.12);font-size:13px;color:#4a2a2a">
+                        <strong style="display:block;margin-bottom:6px">Exemplo rápido</strong>
+                        <div><strong>Identificação:</strong> ${ex.identificacao}</div>
+                        <div><strong>Objetivo:</strong> ${ex.objetivo}</div>
+                        <div><strong>Dados de Entrada:</strong> ${ex.dadosEntrada}</div>
+                        <div><strong>Procedimento:</strong> ${ex.procedimento}</div>
+                        <div><strong>Resultado Esperado:</strong> ${ex.resultadoEsperado}</div>
+                        ${ex.observacoes ? `<div style="margin-top:6px"><strong>Observações:</strong> ${ex.observacoes}</div>` : ''}
+                        <div style="margin-top:8px"><button type="button" style="padding:6px 10px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;border:0;border-radius:8px;cursor:pointer" onclick="insertExampleForMetrica('${metricaType}')">Inserir exemplo nos campos</button></div>
+                    </div>
+                `
+            }
+
+            infoEl.innerHTML = `<strong>${titulo}:</strong> <span style="display:block;margin-top:6px;line-height:1.4;color:#444">${texto}</span>${exemploHtml}`
+        }
+
+        function insertExampleForMetrica(type){
+            const entry = metricasDescricao[type]
+            if(!entry || !entry.exemplo) return
+            const ex = entry.exemplo
+            try{
+                document.getElementById('profTestId').value = ex.identificacao || ''
+                document.getElementById('profTestObjective').value = ex.objetivo || ''
+                document.getElementById('profTestData').value = ex.dadosEntrada || ''
+                document.getElementById('profTestProcedure').value = ex.procedimento || ''
+                document.getElementById('profTestExpected').value = ex.resultadoEsperado || ''
+                document.getElementById('profTestObtained').value = ex.resultadoObtido || ''
+                document.getElementById('profTestObservations').value = ex.observacoes || ''
+            }catch(e){ console.error('Erro ao inserir exemplo:', e) }
+        }
+
+        function updateDisciplinasForStudent(){
+            const studentId = document.getElementById('selectStudentForGrade')?.value
+            const disciplinaSelect = document.getElementById('profDisciplina')
+            if(!studentId || !disciplinaSelect) return
+            
+            // Encontrar disciplinas das turmas em que o aluno está
+            const disciplinas = new Set()
+            turmas.forEach(turma => {
+                if(turma.alunosIds.includes(studentId)){
+                    disciplinas.add(turma.disciplina)
+                }
+            })
+            
+            disciplinaSelect.innerHTML = '<option value="">-- Selecionar Disciplina --</option>'
+            disciplinas.forEach(disc => {
+                const opt = document.createElement('option')
+                opt.value = disc
+                opt.textContent = disc
+                disciplinaSelect.appendChild(opt)
+            })
+        }
+
+        function loadAlunosForDisciplina(){
+            const disciplina = document.getElementById('selectDisciplinaFalta')?.value
+            const container = document.getElementById('alunosChamadaContainer')
+            const list = document.getElementById('alunosChamadaList')
+            
+            if(!disciplina || !container || !list) return
+            
+            // Encontrar todos os alunos da disciplina
+            const alunosDisciplina = new Set()
+            turmas.forEach(turma => {
+                if(turma.disciplina === disciplina){
+                    turma.alunosIds.forEach(alunoId => alunosDisciplina.add(alunoId))
+                }
+            })
+            
+            const alunosArray = Array.from(alunosDisciplina)
+                .map(alunoId => students.find(s => s.id === alunoId))
+                .filter(a => a)
+                .sort((a, b) => a.nome.localeCompare(b.nome))
+            
+            if(alunosArray.length === 0){
+                list.innerHTML = '<li class="muted">Nenhum aluno cadastrado nesta disciplina</li>'
+                container.style.display = 'none'
+                return
+            }
+            
+            container.style.display = 'block'
+            list.innerHTML = alunosArray.map(aluno => `
+                <li style="padding:10px;border-bottom:1px solid #e1e8f5;display:flex;gap:12px;align-items:center">
+                    <input type="checkbox" class="chamadaCheckbox" data-aluno-id="${aluno.id}" data-presenca="1" checked style="width:20px;height:20px;cursor:pointer" onchange="this.dataset.presenca = this.checked ? '1' : '0'" />
+                    <span style="flex:1">${aluno.nome} (${aluno.ra})</span>
+                    <span style="font-size:12px;color:var(--muted)">${aluno.curso}</span>
+                </li>
+            `).join('')
+
+            // set default day to today if select exists
+            const selDia = document.getElementById('selectDiaSemana')
+            if(selDia && !selDia.value){
+                const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+                selDia.value = dias[new Date().getDay()]
+            }
+            // set default date to today if date input exists
+            const selData = document.getElementById('selectDataChamada')
+            if(selData && !selData.value){
+                const d = new Date()
+                const y = d.getFullYear()
+                const m = String(d.getMonth()+1).padStart(2,'0')
+                const day = String(d.getDate()).padStart(2,'0')
+                selData.value = `${y}-${m}-${day}`
+            }
+        }
+
+        function marcarTodosPresenteOuFalta(presente){
+            const checkboxes = document.querySelectorAll('.chamadaCheckbox')
+            checkboxes.forEach(cb => {
+                cb.checked = presente
+                cb.dataset.presenca = presente ? '1' : '0'
+            })
+        }
+
+        function salvarChamada(){
+            const disciplina = document.getElementById('selectDisciplinaFalta')?.value
+            if(!disciplina){
+                alert('Selecione uma disciplina')
+                return
+            }
+            const diaSemana = document.getElementById('selectDiaSemana')?.value
+            if(!diaSemana){
+                alert('Selecione o dia da semana para a chamada')
+                return
+            }
+            const dataChamada = document.getElementById('selectDataChamada')?.value
+            if(!dataChamada){
+                alert('Selecione a data da chamada')
+                return
+            }
+
+            const checkboxes = document.querySelectorAll('.chamadaCheckbox')
+            const chamada = {
+                disciplina,
+                diaSemana,
+                data: dataChamada,
+                alunos: Array.from(checkboxes).map(cb => ({
+                    alunoId: cb.dataset.alunoId,
+                    presente: cb.checked
+                })),
+                ts: new Date().toISOString()
+            }
+            
+            try {
+                let chamadas = JSON.parse(localStorage.getItem('siga_chamadas_v1') || '[]')
+                chamadas.push(chamada)
+                localStorage.setItem('siga_chamadas_v1', JSON.stringify(chamadas))
+                alert(`Chamada salva para ${disciplina} em ${chamada.data} (${chamada.diaSemana})`)
+            } catch(e){
+                alert('Erro ao salvar chamada')
+            }
+        }
+
+        function updateProfessorProfile(){
+            const userEl = document.getElementById('loggedUser')
+            const username = userEl?.textContent || 'Professor'
+            const turmasCount = turmas.length
+            const studentsCount = students.length
+            
+            const nameEl = document.getElementById('profName')
+            const usernameEl = document.getElementById('profUsername')
+            const turmasCountEl = document.getElementById('profTurmasCount')
+            const studentsCountEl = document.getElementById('profStudentsCount')
+            
+            if(nameEl) nameEl.textContent = 'Prof. ' + username.charAt(0).toUpperCase() + username.slice(1)
+            if(usernameEl) usernameEl.textContent = username
+            if(turmasCountEl) turmasCountEl.textContent = turmasCount
+            if(studentsCountEl) studentsCountEl.textContent = studentsCount
+        }
+
+        // Theme functions: aplicar/alternar tema claro/escuro
+        function applyThemeFromStorage(){
+            try{
+                const t = localStorage.getItem('siga_theme_v1') || 'light'
+                if(t === 'dark') document.body.classList.add('dark-mode')
+                else document.body.classList.remove('dark-mode')
+            }catch(e){}
+            try{ updateThemeIcon() }catch(e){}
+        }
+
+        function toggleTheme(){
+            const isDark = document.body.classList.toggle('dark-mode')
+            try{ localStorage.setItem('siga_theme_v1', isDark ? 'dark' : 'light') }catch(e){}
+            updateThemeIcon()
+        }
+
+        function updateThemeIcon(){
+            const btn = document.getElementById('themeToggleBtn')
+            if(!btn) return
+            if(document.body.classList.contains('dark-mode')) btn.textContent = '☀️'
+            else btn.textContent = '🌙'
+        }
+
+        // Função de login falso (usa overlay `loginScreen`)
+        function login() {
+            const username = (document.getElementById('loginUser')||{}).value?.trim();
+            const password = (document.getElementById('loginPass')||{}).value || '';
+            const overlay = document.getElementById('loginScreen');
+            const main = document.getElementById('main');
+
+            // Credenciais falsas: usuário "aluno"/"aluno123"/"professor", senha "123"
+            const isAluno = (username === 'aluno' || username === 'aluno123');
+            const isProfessor = (username === 'professor');
+            
+            if ((isAluno || isProfessor) && password === '123') {
+                // persistir sessão simples
+                const role = isAluno ? 'student' : 'professor';
+                try{ localStorage.setItem('siga_user', JSON.stringify({username: isAluno ? 'aluno' : 'professor', role})) }catch(e){}
+                if(overlay){ overlay.style.display = 'none'; overlay.classList.remove('showing') }
+                if(main) main.style.display = 'block';
+                // exibir nome logado
+                const logged = document.getElementById('loggedUser'); if(logged){ logged.textContent = username; logged.style.display = 'inline-block' }
+                
+                // Mostrar navegação correta
+                const studentNav = document.getElementById('studentNav');
+                const professorNav = document.getElementById('professorNav');
+                
+                if(role === 'professor'){
+                    // Esconder nav de aluno, mostrar nav de professor
+                    if(studentNav) studentNav.style.display = 'none';
+                    if(professorNav) professorNav.style.display = 'grid';
+                    document.body.classList.add('professor-mode')
+                    
+                    // Inicializar dados do professor
+                    populateProfessorSelect()
+                    populateGradeFilter()
+                    updateStudentListPreview()
+                    renderTurmas()
+                    renderAbsenceList()
+                    populateAbsenceSelect()
+                    renderGrades()
+                    renderProfessorRequests()
+                    updateProfessorProfile()
+                    
+                    // Wiring de eventos
+                    const addStudentBtn = document.getElementById('addStudentBtn')
+                    if(addStudentBtn) addStudentBtn.addEventListener('click', addNewStudent)
+                    const addAbsenceBtn = document.getElementById('addAbsenceBtn')
+                    if(addAbsenceBtn) addAbsenceBtn.addEventListener('click', addAbsenceJustification)
+                    const postBtn = document.getElementById('postGradeBtn')
+                    if(postBtn) postBtn.addEventListener('click', postGradeFromProfessor)
+                    const createTurmaBtn = document.getElementById('createTurmaBtn')
+                    if(createTurmaBtn) createTurmaBtn.addEventListener('click', createNewTurma)
+                    const marcarTodosPresenteBtn = document.getElementById('marcarTodosPresenteBtn')
+                    if(marcarTodosPresenteBtn) marcarTodosPresenteBtn.addEventListener('click', () => marcarTodosPresenteOuFalta(true))
+                    const marcarTodosFaltaBtn = document.getElementById('marcarTodosFaltaBtn')
+                    if(marcarTodosFaltaBtn) marcarTodosFaltaBtn.addEventListener('click', () => marcarTodosPresenteOuFalta(false))
+                    const salvarChamadaBtn = document.getElementById('salvarChamadaBtn')
+                    if(salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', salvarChamada)
+                    setupTurmaHorariosUI()
+                    // Atualizar descrição da métrica caso já exista seleção
+                    try { updateMetricaInfo() } catch(e){}
+                    
+                    // Popular select de disciplinas para chamada
+                    const selectDisciplinaFalta = document.getElementById('selectDisciplinaFalta')
+                    if(selectDisciplinaFalta){
+                        const disciplinas = new Set()
+                        turmas.forEach(t => disciplinas.add(t.disciplina))
+                        selectDisciplinaFalta.innerHTML = '<option value="">-- Selecionar Disciplina --</option>'
+                        disciplinas.forEach(d => {
+                            const opt = document.createElement('option')
+                            opt.value = d
+                            opt.textContent = d
+                            selectDisciplinaFalta.appendChild(opt)
+                        })
+                        const selDia = document.getElementById('selectDiaSemana')
+                        if(selDia && !selDia.value){
+                            const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+                            selDia.value = dias[new Date().getDay()]
+                        }
+                        // definir data da chamada para hoje se não houver valor
+                        const selData = document.getElementById('selectDataChamada')
+                        if(selData && !selData.value){
+                            const d = new Date()
+                            const y = d.getFullYear()
+                            const m = String(d.getMonth()+1).padStart(2,'0')
+                            const day = String(d.getDate()).padStart(2,'0')
+                            selData.value = `${y}-${m}-${day}`
+                        }
+                    }
+                    
+                    // Ir para a primeira seção do professor
+                    showSection('turmas')
+                } else {
+                    // Mostrar nav de aluno, esconder nav de professor
+                    if(studentNav) studentNav.style.display = 'grid';
+                    if(professorNav) professorNav.style.display = 'none';
+                    document.body.classList.remove('professor-mode')
+                    
+                    // Ir para a primeira seção do aluno
+                    showSection('home')
+                }
+                
+                loadData('home');
+            } else {
+                alert('Credenciais inválidas!\n\nUse:\n- Aluno: "aluno" ou "aluno123" / senha "123"\n- Professor: "professor" / senha "123"');
+            }
+        }
+
+        // Função para mostrar seção
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            const activeSection = document.getElementById(sectionId);
+            if(activeSection) {
+                activeSection.classList.add('active');
+                activeSection.style.display = 'block';
+            }
+            // mark active tile
+            document.querySelectorAll('.nav button').forEach(b=> b.classList.toggle('active-tile', b.getAttribute('data-view')===sectionId));
+            loadData(sectionId);
+        }
+
+        function renderNovidades(){
+            const container = document.getElementById('novidades-container')
+            if(!container) return
+            if(novidades.length === 0) { container.innerHTML = '<div class="muted">Nenhuma novidade no momento</div>'; return }
+            
+            container.innerHTML = novidades.map(item => {
+                const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+                const isEvento = item.tipo === 'evento'
+                return `
+                    <div style="padding:14px;background:linear-gradient(135deg,rgba(198,40,40,0.04),rgba(255,82,82,0.02));border-left:4px solid rgba(198,40,40,0.2);border-radius:8px;cursor:pointer;transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateX(4px)';this.style.boxShadow='0 8px 20px rgba(198,40,40,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="font-size:24px;line-height:1">${item.icone}</div>
+                            <div style="flex:1">
+                                <strong style="display:block;color:var(--accent);margin-bottom:4px">${item.titulo}</strong>
+                                <div class="muted" style="font-size:12px;margin-bottom:6px">${dataFormatada}</div>
+                                <div style="font-size:13px;line-height:1.4;color:var(--text)">${item.descricao}</div>
+                                ${isEvento && item.local ? `<div style="margin-top:8px;padding:8px;background:rgba(198,40,40,0.06);border-radius:6px;font-size:12px"><strong>📍 Local:</strong> ${item.local}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `
+            }).join('')
+        }
+
+        // Carregar dados nas listas
+        function loadData(sectionId) {
+            if (sectionId === 'novidades') {
+                renderNovidades()
+            } else if (sectionId === 'notas') {
+                const list = document.getElementById('notas-list');
+                list.className = 'list grid';
+                list.innerHTML = notas.map(item => `
+                    <li>
+                        <div>
+                            <strong>${item.disciplina}</strong>
+                            <div class="muted">Parcial: ${item.notaParcial} • Final: ${item.notaFinal} • Média: ${item.media}</div>
+                        </div>
+                        <div class="card-item-meta"><span class="badge status-approved">${item.status}</span></div>
+                    </li>
+                `).join('');
+            } else if (sectionId === 'faltas') {
+                const list = document.getElementById('faltas-list');
+                list.className = 'list grid';
+                list.innerHTML = faltas.map(item => `
+                    <li>
+                        <div>
+                            <strong>${item.disciplina}</strong>
+                            <div class="muted">Aulas: ${item.totalAulas} • Ausências: ${item.ausencias}</div>
+                        </div>
+                        <div class="card-item-meta"><span class="badge ${item.percentual < 75 ? 'status-warning' : 'status-neutral'}">Presença ${item.percentual}%</span></div>
+                    </li>
+                `).join('');
+            } else if (sectionId === 'horario') {
+                const list = document.getElementById('horario-list');
+                list.className = 'list grid';
+                list.innerHTML = horario.map(item => `
+                    <li>
+                        <div>
+                            <strong>${item.disciplina}</strong>
+                            <div class="muted">${item.dia} • ${item.horario} • ${item.professor}</div>
+                        </div>
+                        <div class="card-item-meta"><span class="badge status-neutral">Sala ${item.sala}</span></div>
+                    </li>
+                `).join('');
+            } else if (sectionId === 'disciplinas') {
+                const list = document.getElementById('disciplinas-list');
+                list.className = 'list';
+                list.innerHTML = disciplinas.map(item => `<li><strong>${item.nome}</strong> — ${item.ementa} <div class="muted">${item.professor} • ${item.cargaHoraria}h • ${item.situacao}</div></li>`).join('');
+            } else if (sectionId === 'historico') {
+                const list = document.getElementById('historico-list');
+                list.className = 'list';
+                list.innerHTML = historico.map(item => `<li><strong>${item.disciplina}</strong> — Nota ${item.nota} • Créditos ${item.creditos} • ${item.status}</li>`).join('');
+            } else if (sectionId === 'documentos') {
+                const list = document.getElementById('documentos-list');
+                list.className = 'list';
+                list.innerHTML = documentos.map(item => `<li><a href="${item.url}" download>${item.nome}</a></li>`).join('');
+            } else if (sectionId === 'perfil') {
+                const list = document.getElementById('perfil-list');
+                list.className = 'list';
+                list.innerHTML = `
+                    <li><strong>Nome:</strong> ${perfil.nome}</li>
+                    <li><strong>RA:</strong> ${perfil.ra}</li>
+                    <li><strong>Curso:</strong> ${perfil.curso}</li>
+                    <li><strong>Semestre:</strong> ${perfil.semestre}</li>
+                    <li><strong>PP:</strong> ${perfil.pp}%</li>
+                    <li><strong>PR:</strong> ${perfil.pr}%</li>
+                    <li><strong>PPI:</strong> ${perfil.ppi}%</li>
+                    <li><strong>Unidade:</strong> ${perfil.unidade}</li>
+                `;
+            }
+        }
+
+        // Handlers para formulários
+        function handleRevisao(event) {
+            event.preventDefault();
+            const tipo = document.getElementById('tipo-revisao').value;
+            const justificativa = document.getElementById('justificativa-revisao').value;
+            const arquivo = document.getElementById('arquivo-revisao').files[0]?.name || 'Nenhum arquivo';
+            alert(`Revisão enviada: ${tipo}, Justificativa: ${justificativa}, Arquivo: ${arquivo}`);
+        }
+
+        function handleRematricula(event) {
+            event.preventDefault();
+            const disciplinas = document.getElementById('disciplinas-rematricula').value;
+            alert(`Rematrícula confirmada para: ${disciplinas}`);
+        }
+
+        function handleAE(event) {
+            event.preventDefault();
+            const detalhes = document.getElementById('detalhes-ae').value;
+            alert(`Solicitação AE enviada: ${detalhes}`);
+        }
+
+        function handleRegime(event) {
+            event.preventDefault();
+            const motivo = document.getElementById('motivo-regime').value;
+            const atestado = document.getElementById('atestado-regime').files[0]?.name || 'Nenhum arquivo';
+            alert(`Regime Domiciliar solicitado: Motivo ${motivo}, Atestado: ${atestado}`);
+        }
+
+        function handleAC(event) {
+            event.preventDefault();
+            const descricao = document.getElementById('descricao-ac').value;
+            const horas = document.getElementById('horas-ac').value;
+            const comprovante = document.getElementById('comprovante-ac').files[0]?.name || 'Nenhum arquivo';
+            alert(`AC enviada: Descrição ${descricao}, Horas ${horas}, Comprovante: ${comprovante}`);
+        }
+
+        // Professor actions
+        function postGradeFromProfessor(){
+            const sid = document.getElementById('selectStudentForGrade').value
+            const disc = document.getElementById('profDisciplina').value.trim()
+            const nota = document.getElementById('profNota').value ? Number(document.getElementById('profNota').value) : null
+            
+            // Métricas de teste
+            const testId = document.getElementById('profTestId').value.trim()
+            const testObjective = document.getElementById('profTestObjective').value.trim()
+            const testData = document.getElementById('profTestData').value.trim()
+            const testProcedure = document.getElementById('profTestProcedure').value.trim()
+            const testExpected = document.getElementById('profTestExpected').value.trim()
+            const testObtained = document.getElementById('profTestObtained').value.trim()
+            const testObservations = document.getElementById('profTestObservations').value.trim()
+            
+            if(!sid || !disc){ alert('Selecione aluno e informe a disciplina'); return }
+            const s = students.find(x=>x.id === sid)
+            if(!s) { alert('Aluno não encontrado'); return }
+            
+            const entry = {
+                disciplina: disc, 
+                nota, 
+                testMetrics: {
+                    identificacao: testId,
+                    objetivo: testObjective,
+                    dadosEntrada: testData,
+                    procedimento: testProcedure,
+                    resultadoEsperado: testExpected,
+                    resultadoObtido: testObtained,
+                    observacoes: testObservations
+                },
+                professor: (JSON.parse(localStorage.getItem('siga_user')||'{}')).username || 'professor', 
+                ts: new Date().toISOString()
+            }
+            s.notas = s.notas || []
+            s.notas.push(entry)
+            s.observacoes = (s.observacoes || '') + `\n[${entry.ts}] ${entry.professor} -> ${disc}: nota=${nota}\n  Teste: ${testId} - ${testObjective}`
+            saveStudents();
+            alert('Lançamento realizado com métricas de teste')
+            
+            // limpar campos de teste
+            document.getElementById('profTestId').value = ''
+            document.getElementById('profTestObjective').value = ''
+            document.getElementById('profTestData').value = ''
+            document.getElementById('profTestProcedure').value = ''
+            document.getElementById('profTestExpected').value = ''
+            document.getElementById('profTestObtained').value = ''
+            document.getElementById('profTestObservations').value = ''
+            
+            // refresh notas display
+            renderGrades(document.getElementById('filterStudentGrades').value)
+            // refresh requests / UI if needed
+            renderProfessorRequests()
+        }
+
+        function renderProfessorRequests(){
+            const key = 'siga_requests_v1'
+            const raw = localStorage.getItem(key)
+            let arr = []
+            try{ arr = raw ? JSON.parse(raw) : [] }catch(e){ arr = [] }
+            const ul = document.getElementById('requestsList')
+            if(!ul) return
+            if(arr.length === 0){ ul.innerHTML = '<li class="muted">Nenhuma solicitação</li>'; return }
+            ul.innerHTML = arr.map((r,idx)=>{
+                return `<li style="display:flex;justify-content:space-between;align-items:center"><div><strong>${r.type||r.type}</strong><div class="muted">${r.user||'anon'} — ${r.ts? new Date(r.ts).toLocaleString():''}</div><div style="margin-top:6px">${(r.desc||r.list||r.disc||'')}</div></div><div style="display:flex;gap:8px"><button data-idx="${idx}" class="approve">Aprovar</button><button data-idx="${idx}" class="reject secondary">Rejeitar</button></div></li>`
+            }).join('')
+        }
+
+        // handle approve/reject clicks
+        document.body.addEventListener('click', (e)=>{
+            if(e.target && e.target.classList.contains('approve')){
+                const idx = Number(e.target.getAttribute('data-idx'))
+                const key = 'siga_requests_v1'
+                try{
+                    const raw = localStorage.getItem(key)
+                    const arr = raw? JSON.parse(raw):[]
+                    const req = arr[idx]
+                    if(req){ req.status = 'aprovado'; req.handledBy = (JSON.parse(localStorage.getItem('siga_user')||'{}')).username || 'professor'; arr.splice(idx,1)
+                        localStorage.setItem(key, JSON.stringify(arr))
+                        alert('Solicitação aprovada')
+                        renderProfessorRequests()
+                    }
+                }catch(err){ console.error(err); alert('Erro ao processar') }
+            }
+            if(e.target && e.target.classList.contains('reject')){
+                const idx = Number(e.target.getAttribute('data-idx'))
+                const key = 'siga_requests_v1'
+                try{
+                    const raw = localStorage.getItem(key)
+                    const arr = raw? JSON.parse(raw):[]
+                    if(arr[idx]){ arr.splice(idx,1); localStorage.setItem(key, JSON.stringify(arr)); renderProfessorRequests(); alert('Solicitação removida') }
+                }catch(err){ console.error(err); alert('Erro ao processar') }
+            }
+        })
+
+        // Inicialização: wire do formulário de login overlay e botão demo
+        document.addEventListener('DOMContentLoaded', () => {
+            const lf = document.getElementById('loginForm');
+            const overlay = document.getElementById('loginScreen');
+            const main = document.getElementById('main');
+            let currentUser = null
+            loadStudents()
+            loadTurmas()
+            // aplicar tema salvo (claro / escuro)
+            try{ applyThemeFromStorage() }catch(e){}
+            // check persisted user
+            try {
+                const raw = localStorage.getItem('siga_user');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.username) {
+                        currentUser = parsed
+                        if (overlay) overlay.style.display = 'none';
+                        if (main) main.style.display = 'block';
+                        const logged = document.getElementById('loggedUser');
+                        if (logged) { logged.textContent = parsed.username; logged.style.display = 'inline-block' }
+                    } else {
+                        if (overlay) overlay.style.display = 'flex';
+                        if (main) main.style.display = 'none';
+                    }
+                } else {
+                    if (overlay) overlay.style.display = 'flex';
+                    if (main) main.style.display = 'none';
+                }
+            } catch (e) {
+                if (overlay) overlay.style.display = 'flex';
+                if (main) main.style.display = 'none';
+            }
+            const userField = document.getElementById('loginUser');
+            if(userField) userField.focus();
+            if(lf) lf.addEventListener('submit', (e) => { e.preventDefault(); login(); });
+            const demoBtn = document.getElementById('demoCredentials');
+            if(demoBtn){ demoBtn.addEventListener('click', ()=>{ const u = document.getElementById('loginUser'); const p = document.getElementById('loginPass'); if(u) u.value='aluno'; if(p) p.value='123'; if(u) u.focus(); }); }
+            // theme toggle wiring
+            const themeBtn = document.getElementById('themeToggleBtn')
+            if(themeBtn) themeBtn.addEventListener('click', toggleTheme)
+            try{ updateThemeIcon() }catch(e){}
+            // if logged in, show appropriate nav and init
+            try{
+                const raw = localStorage.getItem('siga_user')
+                const parsed = raw ? JSON.parse(raw) : null
+                if(parsed && parsed.role === 'professor'){
+                    // Mostrar nav do professor
+                    const studentNav = document.getElementById('studentNav');
+                    const professorNav = document.getElementById('professorNav');
+                    if(studentNav) studentNav.style.display = 'none';
+                    if(professorNav) professorNav.style.display = 'grid';
+                    
+                    document.body.classList.add('professor-mode')
+                    populateProfessorSelect()
+                    populateGradeFilter()
+                    updateStudentListPreview()
+                    renderTurmas()
+                    renderAbsenceList()
+                    populateAbsenceSelect()
+                    renderGrades()
+                    renderProfessorRequests()
+                    updateProfessorProfile()
+                    const addStudentBtn = document.getElementById('addStudentBtn')
+                    if(addStudentBtn) addStudentBtn.addEventListener('click', addNewStudent)
+                    const addAbsenceBtn = document.getElementById('addAbsenceBtn')
+                    if(addAbsenceBtn) addAbsenceBtn.addEventListener('click', addAbsenceJustification)
+                    const postBtn = document.getElementById('postGradeBtn')
+                    if(postBtn) postBtn.addEventListener('click', postGradeFromProfessor)
+                    const createTurmaBtn = document.getElementById('createTurmaBtn')
+                    if(createTurmaBtn) createTurmaBtn.addEventListener('click', createNewTurma)
+                    const marcarTodosPresenteBtn = document.getElementById('marcarTodosPresenteBtn')
+                    if(marcarTodosPresenteBtn) marcarTodosPresenteBtn.addEventListener('click', () => marcarTodosPresenteOuFalta(true))
+                    const marcarTodosFaltaBtn = document.getElementById('marcarTodosFaltaBtn')
+                    if(marcarTodosFaltaBtn) marcarTodosFaltaBtn.addEventListener('click', () => marcarTodosPresenteOuFalta(false))
+                    const salvarChamadaBtn = document.getElementById('salvarChamadaBtn')
+                    if(salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', salvarChamada)
+                    setupTurmaHorariosUI()
+                    // Atualizar descrição da métrica (inicialização)
+                    try { updateMetricaInfo() } catch(e){}
+                    
+                    // Popular select de disciplinas para chamada
+                    const selectDisciplinaFalta = document.getElementById('selectDisciplinaFalta')
+                    if(selectDisciplinaFalta){
+                        const disciplinas = new Set()
+                        turmas.forEach(t => disciplinas.add(t.disciplina))
+                        selectDisciplinaFalta.innerHTML = '<option value="">-- Selecionar Disciplina --</option>'
+                        disciplinas.forEach(d => {
+                            const opt = document.createElement('option')
+                            opt.value = d
+                            opt.textContent = d
+                            selectDisciplinaFalta.appendChild(opt)
+                        })
+                        const selDia = document.getElementById('selectDiaSemana')
+                        if(selDia && !selDia.value){
+                            const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+                            selDia.value = dias[new Date().getDay()]
+                        }
+                    }
+                    
+                    showSection('turmas')
+                } else if(parsed && parsed.role === 'student'){
+                    // Mostrar nav do aluno
+                    const studentNav = document.getElementById('studentNav');
+                    const professorNav = document.getElementById('professorNav');
+                    if(studentNav) studentNav.style.display = 'grid';
+                    if(professorNav) professorNav.style.display = 'none';
+                    document.body.classList.remove('professor-mode')
+                    showSection('home')
+                }
+            }catch(e){}
+        });
+
+        // Logout top button
+        document.addEventListener('click', (e)=>{
+            if(e.target && e.target.id === 'logoutBtnTop'){
+                // clear stored user and reload
+                try{ localStorage.removeItem('siga_user') }catch(e){}
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
